@@ -1,0 +1,334 @@
+#include <iostream>
+#include <time.h>
+#include <vector>
+using namespace std;
+bool stop = false;
+// bruteforce function to find optimal solution
+int bf (int price[], int cal[], int index, int limit, int n, vector <int> &taken, int &C3)
+{
+    C3++;
+    if (stop == true)
+        return 0;
+    C3++;
+    if (limit == 0)
+        stop = true;
+    C3++;
+    if (index == n+1 || limit == 0)
+    {
+        C3++;
+        return 0;
+    }
+
+    if (price[index] > limit)
+    {
+        C3++;
+        return bf (price,cal,index+1,limit, n,taken, C3);
+    }
+    else
+    {
+        int preTookSize = taken.size(); C3++;
+        int took = cal[index] + bf(price,cal,index+1,limit-price[index],n,taken,C3); C3++;
+        
+        int preLeftSize = taken.size(); C3++;
+        int left = bf(price,cal,index+1,limit,n,taken,C3); C3++;
+        C3++;
+        
+        if (took > left)
+        {
+            C3++;
+            if (taken.size() > preLeftSize)
+            {
+                C3++;
+                taken.erase(taken.begin()+preLeftSize,taken.begin()+taken.size());
+            }
+            taken.push_back(index); C3++;
+            C3++;
+            return took;
+        }
+        else
+        {
+            C3++;
+            if (preLeftSize > preTookSize)
+            {
+                C3++;
+                taken.erase(taken.begin()+preTookSize,taken.begin()+preLeftSize);
+            }
+            C3++;
+            return left;
+        }
+    }
+}
+
+void printBF (vector <int> &taken, int i)
+{
+    if (i == taken.size())
+        return;
+    
+    printBF (taken,i+1);
+    cout << taken[i] << " ";
+}
+
+// dynamic programming function find optimal solution
+int dynamicprog (int price [], int cal [], int K [][3001], int index, int limit, int n, int &C2)
+{
+    C2+=2;
+    for(int i = index; i <= n; i++)
+    {   C2+=2;
+        C2+=2;
+        for(int j = 0; j <= limit; j++)
+        {   C2+=2;
+            C2++;
+            if (i == index || j == 0)
+            {
+                K[i][j] = 0;
+                C2++;
+            }
+            else if (price[i] <= j)
+            {
+                K[i][j] = max(cal[i] + K[i - 1][j - price[i]], K[i - 1][j]);
+                C2++;
+            }
+            else
+            {
+                K[i][j] = K[i - 1][j];
+                C2++;
+            }
+        }
+    }
+    return K[n][limit];
+}
+
+// prints the items used in dynamic programming
+void printDY (int i, int j, int price[], int K[][3001], int index)
+{
+    if (i <= index || j <= 0)
+        return;
+
+    if (K[i][j] != K[i-1][j])
+    {
+        printDY(i-1,j - price[i],price,K,index);
+        cout << i << " ";
+    }
+    else
+        printDY(i-1,j,price,K,index);
+}
+
+// boolean function to check if we can take the most expensive item
+bool maxPrice (int price[], int index, int limit, int n)
+{
+    // 20 40 35
+    // max1 = 40 max2 = 35
+    int max1 = 0, max2 = 0;
+    
+    for (int i = index; i <= n; i++)
+        if (price[i] > max1)
+        {
+            max2 = max1;
+            max1 = price[i];
+        }
+        else if (price[i] > max2)
+            max2 = price[i];
+    
+    if ( max1+max2 > limit)
+        return false;
+    
+    return true;
+}
+
+// a function that prints an array
+void printArray(int arr[], int n)
+{
+    int count = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        if (count % 10 == 0)
+            cout << endl;
+        cout << arr[i] << " ";
+        count++;
+    }
+    cout << endl << endl;
+}
+
+void heapify(int price[], int cal[], int N, int i)
+{
+    // Initialize min as root
+    int min = i;
+    // left
+    int l = 2 * i ;
+    // right
+    int r = 2 * i + 1;
+    // If left child is smaller than root
+    if (l < N && (float)cal[l]/price[l] < (float)cal[min]/price[min])
+        min = l;
+
+    // If right child is smaller than largest so far
+    if (r < N && (float)cal[r]/price[r] < (float)cal[min]/price[min])
+        min = r;
+
+    // If min is not root
+    if (min != i) {
+        swap(price[i], price[min]);
+        swap(cal[i], cal[min]);
+
+        // Recursively heapify the affected sub-tree
+        heapify(price, cal, N, min);
+    }
+}
+
+// Main function to do heap sort
+void heapSort(int price[], int cal[], int N)
+{
+    // Build heap (rearrange array)
+    for (int i = N / 2; i >= 1; i--)
+        heapify(price, cal, N, i);
+
+    // One by one extract an element from heap
+    for (int i = N; i > 1; i--) {
+
+        // Move current root to end
+        swap(price[1], price[i]);
+        swap(cal[1], cal[i]);
+        // call heapify on the reduced heap
+        heapify(price, cal, i, 1);
+    }
+}
+
+// greedy method to find optimal solution
+int greedy1 (int n, int &limit, int &index1, int price[], int cal[], int &C1)
+{
+    int i, takenCal = 0; C1++;
+    C1+=2;
+    for (i = 1; i <= n; i++)
+    {   C1+=2;
+        // check if we can take the most expensive item with the remaining
+        C1++;
+        if ( price[i] <= limit && maxPrice(price, i+1, limit-price[i], n) )
+        {
+            limit -= price[i]; C1++; // decrease the remaining limit
+            takenCal += cal[i]; C1++; // add the calories taken
+        }
+        else
+        {
+            C1++;
+            break;
+        }
+    }
+    index1 = i-1; C1++;
+    C1++;
+    return takenCal;
+}
+
+// greedy method to find optimal solution
+int greedy2 (int n, int &limit, int &index2, int price[], int cal[], int t[], int &C4)
+{
+    int i,j,k, takenCal = 0; C4++;
+    int maxcal,itaken,iremoved; C4++;
+    C4+=2;
+    for (i = 1; i <= n; i++)
+    {   C4+=2;
+        // check if we can take the most expensive item with the remaining
+        C4++;
+        if ( price[i] <= limit )
+        {
+            limit -= price[i]; C4++; // decrease the remaining limit
+            takenCal += cal[i]; C4++; // add the calories taken
+            t[i] = i; C4++;// add the item to the taken items list
+        }
+        else
+        {
+            C4++;
+            break;
+        }
+    }
+    index2 = i-1; C4++;
+    maxcal = takenCal; C4++;
+    C4+=2;
+    for (j = i; j <= n; j++)
+    {   C4+=2;
+        for (k = i-1; k >= 1; k--)
+        {   C4+=2;
+            C4++;
+            if ( price[j] <= ( limit + price[k] ) && ( takenCal - cal[k] + cal[j] ) > maxcal )
+            {
+                    maxcal = takenCal - cal[k] + cal[j]; C4++;
+                    itaken = j; C4++;
+                    iremoved = k; C4++;
+            }
+        }
+    }
+    C4++;
+    if (maxcal != takenCal)
+    {
+        t[iremoved] = itaken; C4++;
+        takenCal = maxcal; C4++;
+        limit = limit + price[iremoved] - price[itaken]; C4++;
+    }
+    C4++;
+    return takenCal;
+}
+
+int main()
+{
+    srand(50);
+    
+    vector <int> taken;
+    
+    for (int i = 50; i <= 500; i+=50)
+    {
+        for (int j = 500; j <= 3000; j+=500)
+        {
+            int limit = j;
+            int n = i;
+            int C1 = 0, C2 = 0, C3 = 0, C4 = 0;
+            int price[n+1], cal[n+1], t[n+1];
+            int index;
+            int K[501][3001];
+            
+            for (int i = 1; i <= n; i++)
+                price [i] = 10 + rand()%31;
+
+            for (int i = 1; i <= n; i++)
+                cal [i] = 10 + rand()%31;
+            
+            heapSort(price,cal,n);
+            
+            cout << "\nN = " << n << " Limit = " << limit << endl;
+            cout << "DP Taken Calories: " << dynamicprog(price,cal,K,0,limit,n,C2) << endl;
+            cout << "DP Steps: " << C2 << endl;
+            C2 = 0;
+            int takenCal = greedy1(n,limit,index,price,cal,C1);
+    
+            taken.clear();
+            stop = false;
+            cout << "\nGreedy 1 BF - Taken Calories: " << bf (price,cal,index+1,limit,n,taken,C3) + takenCal << endl;
+    
+            cout << "Greedy 1 DP - Taken Calories: " << dynamicprog(price,cal,K,index,limit,n,C2) + takenCal << endl;
+            
+            /*
+            cout << "greedy function taken items: " << endl;
+            for (int i = 1; i <= index; i++)
+                cout << i << " ";
+            cout << endl;
+            
+            cout << "Bruteforce - items: ";
+            printBF(taken,0);
+    
+            cout << "\nDynamic programming - items: ";
+            printDY (n,limit,price,K,index);
+            cout << endl;
+            */
+            
+            limit = j; n = i;
+            takenCal = greedy2(n,limit,index,price,cal,t,C4);
+            cout << "Greedy 2 - Taken Calories: " << takenCal << endl;
+            //printArray(t,index);
+            //cout << "unused limit: " << limit << endl;
+            cout << "\nGreedy Method 1 with BF Steps: " << C1 + C3 << endl;
+            cout << "Greedy Method 1 with DP Steps: " << C1 + C2 << endl;
+            cout << "Greedy Method 2 Steps: " << C4 << endl;
+            cout << "--------------------------" << endl;
+        }
+        cout << "********************************" << endl;
+    }
+    return 0;
+}

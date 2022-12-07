@@ -1,1 +1,0 @@
-# Knapsack-Greedy-Methods
